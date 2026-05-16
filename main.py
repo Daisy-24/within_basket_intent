@@ -110,8 +110,8 @@ def max_k(search_set, item, item_for_user, num_nearest_neighbors, data_chunk, al
     user_popular = np.array(item_for_user)[count_index]
 
     batch = vstack([search_set[user - 1][item] for user in user_popular])  # sparse (250, 2596)
-    batch_dense = batch.toarray()  # 一次转dense
-    vecs = cp.asarray(batch_dense)  # 一次传GPU
+    batch_dense = batch.toarray()  
+    vecs = cp.asarray(batch_dense)  
 
     history = vecs.sum(axis=0)
     merge_history = cp.asnumpy((history / len(user_popular) * (1 - alpha)))
@@ -192,7 +192,7 @@ print('finishing vector generation---------')
 # -------------------start test------------------
 
 for k in range(1, 11):
-    print(f"\n========== 第 {k} 轮测试 (文件后缀 _{k}) ==========")
+    print(f"\n========== Round {k} of testing (file extension _{k}) ==========")
 
     hit_num, mrr_num = 0, 0
 
@@ -202,7 +202,6 @@ for k in range(1, 11):
 
     all_embeddings = np.zeros((item_size, 384), dtype=np.float32)
 
-    # 取出 index，需要-1
     indices = np.array([item['StockCode'] - 1 for item in item_intent], dtype=np.int32)
 
     embeddings = np.vstack([item['embedding'] for item in item_intent]).astype(np.float32)
@@ -211,7 +210,7 @@ for k in range(1, 11):
 
 
     with open(f'../../datasets/Dunnhumby/basket_embeddings_384_{k}.pkl', 'rb') as file:
-        basket_intents = pickle.load(file)  # basket 编号从 0 开始
+        basket_intents = pickle.load(file)  
 
     eps = 1e-10
     all_norm = np.linalg.norm(all_embeddings, axis=1).astype(np.float32)
