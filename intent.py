@@ -131,15 +131,15 @@ for user, item_data in tqdm(user_to_item_test_dict.items()):
 
     for i in range(len(items)):
         given_desc = np.delete(descriptions, i)
-        # 购物篮
+        
 
-        # 版本5
+        # 5
         # prompt = (
         #     f"Given the basket items {given_desc}, write a brief shopping intent for the user and the situation that might lead them to buy these items together."
         # )
   
        
-        # 版本9
+        # 9
         # prompt = (
         #     f"Given the basket items: {given_desc}, "
         #     "infer the user's underlying shopping intent and the real-life scenarios "
@@ -148,7 +148,7 @@ for user, item_data in tqdm(user_to_item_test_dict.items()):
         #     "Focus on motivations and behaviors rather than listing products."
         # )
 
-        # 版本10
+        # 10
         prompt = (
           f"Given the basket items: {given_desc}, "
           "infer the user's underlying shopping intent and the real-life scenarios "
