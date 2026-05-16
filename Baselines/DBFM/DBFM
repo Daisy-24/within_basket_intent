@@ -8,3 +8,7 @@
   year={2022},
   publisher={Elsevier}
 }
+
+Usage: 
+First, download the corresponding data files for the three datasets in the `data` folder (within_basket_intent/data/Dunn). 
+Then, run `data.py`, followed by `model_sample.py`.
