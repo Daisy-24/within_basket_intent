@@ -89,13 +89,13 @@ def temporal_decay_sum_history(data_chunk, item_size, within_decay_rate):
             # flatten items
             flat_items = np.concatenate(co_items) - 1
 
-            # 每个 basket 的长度
+            
             lens = np.array([len(b) for b in co_items])
 
-            # 为每个 item 生成对应的权重
+            
             weights = np.repeat(decay_vec_, lens)
 
-            # 累加
+            
             his_matrix = np.zeros(item_size)
             np.add.at(his_matrix, flat_items, weights)
 
