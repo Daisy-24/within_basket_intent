@@ -12,3 +12,11 @@
 Usage: 
 First, download the corresponding data files for the three datasets in the `data` folder (within_basket_intent/data/Dunn). 
 Then, run `data.py`, followed by `model_sample.py`.
+
+Environment:
+- Python 3.9
+- CUDA Toolkit: 11.2.2
+- cuDNN: 8.1.0.77
+- TensorFlow: 2.10.0
+
+
