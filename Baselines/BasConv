@@ -1,1 +1,5 @@
-https://arxiv.org/pdf/2001.09900
+Liu, Z., Wan, M., Guo, S., Achan, K., Yu, P.S.: BasConv: Aggregating heterogeneous interactions for basket recommendation with graph convolutional neural network. 
+In: Proceedings of the 2020 SIAM International Conference on Data Mining, pp. 64–72 (2020)
+
+Paper:https://arxiv.org/pdf/2001.09900
+Code:https://github.com/JimLiu96/basConv/tree/master
