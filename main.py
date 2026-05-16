@@ -51,16 +51,14 @@ for index, content in df_test_user:
     user_to_item_test_dict[user_id] = item_id
 
 # ----------------History component----------------------
-# user -> row index 映射,转成 0、1、2、3.. 这样的连续索引
+# user -> row index 
 user_index_map = {user: i for i, user in enumerate(train_users)}
 
 user_item_matrix = np.zeros((user_size, item_size),dtype=np.float32)
 
-# 先按 user 和 item 分组
 grouped = data_train.groupby(['user_id', 'item_id'])
 
 for (user, item), g in grouped:
-    #每次循环拿到一个用户ID，用映射表把它换成对应的矩阵行索引。
     i = user_index_map[user]  # user → row index
     j = item - 1
 
@@ -71,12 +69,12 @@ for (user, item), g in grouped:
     user_item_matrix[i, j] += decay_vec.sum()
 
 
-print('----历史得分组件加载完成----')
+print('----Historical score component loading complete----')
 
-# 共现字典
+# Co-occurrence dictionary
 with open('../../datasets/Dunnhumby/data_chunk.pkl', 'rb') as file:
     data_chunk=pickle.load(file)
-print('----data_chunk---载入完成')
+print('----data_chunk---')
 
 # Temporal dynamics
 def temporal_decay_sum_history(data_chunk, item_size, within_decay_rate):
@@ -105,16 +103,12 @@ def temporal_decay_sum_history(data_chunk, item_size, within_decay_rate):
 
     return sum_history
 
-# zero-shot
-# zero-shot：把稀疏向量转dense再送GPU，其余不变
-
 
 def max_k(search_set, item, item_for_user, num_nearest_neighbors, data_chunk, alpha):
     count = [len(list(chain(*data_chunk[user - 1][item]))) for user in item_for_user]
     count_index = np.argsort(count)[-num_nearest_neighbors:][::-1]
     user_popular = np.array(item_for_user)[count_index]
 
-    # 批量stack成 (250, 2596)，一次toarray，一次传GPU
     batch = vstack([search_set[user - 1][item] for user in user_popular])  # sparse (250, 2596)
     batch_dense = batch.toarray()  # 一次转dense
     vecs = cp.asarray(batch_dense)  # 一次传GPU
@@ -134,14 +128,11 @@ def cosine_similarity_vector_matrix(vector, matrix):
 
 
 def KNN(target_set, vector,item, k, item_for_user, alpha):
-    # 原来: cp.asarray(vector) 直接转，vector已是dense numpy
-    # 优化: vector是稀疏，先转dense
+
     vector = cp.asarray(vector.toarray()[0])
     selected_set = cp.empty((len(item_for_user), item_size), dtype=cp.float16)
 
     for i, user in enumerate(item_for_user):
-        # 原来: cp.asarray(target_set[(user-1)][item])
-        # 优化: 先把稀疏转dense
         selected_set[i] = cp.asarray(target_set[(user - 1)][item].toarray()[0])
 
     selected_set_transformed = (selected_set > 0).astype(int)
@@ -205,27 +196,22 @@ for k in range(1, 11):
 
     hit_num, mrr_num = 0, 0
 
-    # -------------------购物意图得分----------------------
+    # -------------------Shopping Intent Score----------------------
     with open(f'../../datasets/Dunnhumby/item_intent_embeddings_384_{k}.pkl', 'rb') as file:
         item_intent = pickle.load(file)
 
-    # 初始化完整矩阵（所有 item 都有位置）
     all_embeddings = np.zeros((item_size, 384), dtype=np.float32)
 
     # 取出 index，需要-1
     indices = np.array([item['StockCode'] - 1 for item in item_intent], dtype=np.int32)
 
-    # 取出 embedding
     embeddings = np.vstack([item['embedding'] for item in item_intent]).astype(np.float32)
-
-    # 一次性填入
+    
     all_embeddings[indices] = embeddings
 
 
-    # -------导入购物篮的购物意图-------
     with open(f'../../datasets/Dunnhumby/basket_embeddings_384_{k}.pkl', 'rb') as file:
         basket_intents = pickle.load(file)  # basket 编号从 0 开始
-
 
     eps = 1e-10
     all_norm = np.linalg.norm(all_embeddings, axis=1).astype(np.float32)
@@ -240,7 +226,6 @@ for k in range(1, 11):
     print("alpha grid:", alpha_grid.shape)
     print("beta grid:", beta_grid.shape)
 
-    # 初始化
     HR10 = np.zeros((len(alpha_list), len(beta_list)))
     HR20 = np.zeros((len(alpha_list), len(beta_list)))
     HR50 = np.zeros((len(alpha_list), len(beta_list)))
@@ -318,7 +303,7 @@ for k in range(1, 11):
 
             count += 1
 
-    # -------------------输出本轮结果-------------------
+    # -------------------results-------------------
     results = []
 
     HR10  /= test_number
