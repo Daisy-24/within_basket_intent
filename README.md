@@ -19,7 +19,9 @@ then run intent.py followed by main.py.
 ## Prompt for Basket Intent Generation
 
 Style 1: Generate a specific shopping intent or multiple scenarios (if have) for a user with items {descriptions} in their basket. Explain why the user might select these items, consider-ing various scenarios such as “preparation, household needs, or special events.
+
 Style 2: Generate a shopping intent or multiple scenarios (if have) for a user whose basket contains {descriptions}. Describe possible real-life scenarios or motivations behind choosing each item — for example, daily household needs, event preparation, or other special events. Make the reasoning natural and human-like.
+
 Style 3: Generate a detailed shopping intent or multiple scenarios (if have) for a user whose basket contains {descriptions}. Describe possible real-life scenarios or motivations behind choosing each item — for example, daily household needs, event preparation, or other special events. Make the reasoning natural and human-like.
 Style 4: The user’s basket contains {descriptions}. Generate several possible shopping scenar-ios and corresponding user intentions — e.g., daily routines, event preparation, or special plans. For each scenario, briefly explain how the items relate to the user’s motivation.
 Style 5: Given the basket items {descriptions}, write a brief shopping intent for the user and the situation that might lead them to buy these items together.
