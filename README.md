@@ -16,7 +16,7 @@ then run intent.py followed by main.py.
 - tqdm 4.67.3
 - cupy
 
-##Prompt for Basket Intent Generation
+## Prompt for Basket Intent Generation
 
 Style 1: Generate a specific shopping intent or multiple scenarios (if have) for a user with items {descriptions} in their basket. Explain why the user might select these items, consider-ing various scenarios such as “preparation, household needs, or special events.
 Style 2: Generate a shopping intent or multiple scenarios (if have) for a user whose basket contains {descriptions}. Describe possible real-life scenarios or motivations behind choosing each item — for example, daily household needs, event preparation, or other special events. Make the reasoning natural and human-like.
