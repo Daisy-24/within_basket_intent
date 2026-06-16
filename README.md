@@ -35,4 +35,5 @@ Style 7: You are a shopping behavior analyst. A customer adds the following prod
 Style 8: Describe the purchase intent in one sentence using the format: Customers buy this product to [goal] in order to [benefit] during [scenario]. Product:{descriptions}.
 
 Style 9: Given the basket items: {descriptions}, infer the user’s underlying shopping intent and the real-life scenarios that explain why these items are purchased together. Describe the concrete situations and how the items function together to support these goals. Focus on moti-vations and behaviors rather than listing products.       
+
 Style 10: Given the basket items: { descriptions }, infer the user’s underlying shopping intent and the real-life scenarios that explain why these items are purchased together. 
