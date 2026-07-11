@@ -72,8 +72,21 @@ for (user, item), g in grouped:
 print('----Historical score component loading complete----')
 
 # Co-occurrence dictionary
-with open('../../datasets/Dunnhumby/data_chunk.pkl', 'rb') as file:
-    data_chunk=pickle.load(file)
+data_chunk = [{} for _ in range(user_size)]
+
+for product, users in data_dict.items():
+    for user in users:
+        train_user_data = data_train[data_train['user_id'] == user]
+
+        product_baskets = train_user_data[train_user_data['item_id'] == product]['transaction_number'].unique()
+        for basket in product_baskets:
+            basket_items = train_user_data[train_user_data['transaction_number'] == basket]['item_id']
+            co_occurrence = list(set(basket_items) - {product})
+            data_chunk[user - 1].setdefault(product, []).append(co_occurrence)
+
+# with open('../../datasets/Dunnhumby/data_chunk.pkl', 'rb') as file:
+#     data_chunk=pickle.load(file)
+    
 print('----data_chunk---')
 
 # Temporal dynamics
