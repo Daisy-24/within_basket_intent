@@ -323,7 +323,7 @@ with open(item_pickle_path, 'wb') as f:
 print(f"Saved item embeddings → {item_pickle_path}")
 
 
-print("\nAll intents generated successfully ✓")
+
 
 
 
