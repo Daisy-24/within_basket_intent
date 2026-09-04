@@ -5,9 +5,7 @@ from tqdm import tqdm
 import torch
 from transformers import AutoTokenizer, AutoModel, AutoModelForSeq2SeqLM
 
-# =====================================================
-# Device
-# =====================================================
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
@@ -15,7 +13,7 @@ print(f"Using device: {device}")
 # =====================================================
 # Load Models
 # =====================================================
-t5_model_name = "google/flan-t5-large"
+t5_model_name = "google/flan-t5-small"
 t5_tokenizer = AutoTokenizer.from_pretrained(t5_model_name)
 t5_model = AutoModelForSeq2SeqLM.from_pretrained(t5_model_name).to(device)
 
@@ -25,7 +23,7 @@ embed_model = AutoModel.from_pretrained(embed_model_name).to(device)
 
 
 # =====================================================
-# Embedding function (mask-aware mean pooling)
+# Embedding function 
 # =====================================================
 def get_embedding(texts, batch_size=64):
 
@@ -65,9 +63,6 @@ def get_embedding(texts, batch_size=64):
     return all_embeddings
 
 
-# =====================================================
-# Load data
-# =====================================================
 data_train = pd.read_csv('../../datasets/Dunnhumby/data_train_des.csv')
 data_test = pd.read_csv('../../datasets/Dunnhumby/data_test_des.csv')
 
@@ -131,15 +126,41 @@ for user, item_data in tqdm(user_to_item_test_dict.items()):
 
     for i in range(len(items)):
         given_desc = np.delete(descriptions, i)
-        
 
-        # 5
+        #1
         # prompt = (
-        #     f"Given the basket items {given_desc}, write a brief shopping intent for the user and the situation that might lead them to buy these items together."
+        #                 f"Generate a specific shopping intent or multiple scenarios (if have) for a user with items {given_desc} "
+        #                 "in their basket. Explain why the user might select these items, considering various scenarios such as "
+        #                 "preparation, household needs, or special events."
+        #             )
+        # 5
+        prompt = (
+            f"Given the basket items {given_desc}, write a brief shopping intent for the user and the situation that might lead them to buy these items together."
+        )
+        #6
+        # prompt = (
+        #     "You are a shopping behavior analyst. "
+        #     "Infer the overall shopping intent. "
+        #     "Describe the life scenario or goal. "
+        #     "Do NOT list products.\n"
+        #     f"Products: {given_desc}"
         # )
-  
-       
+        # 7
+        # prompt = ("You are a shopping behavior analyst. A customer adds the following products to the basket.\n"
+        #           "Infer the overall shopping intent. \n"
+        #           "Summarize: the possible shopping goal, the life scenario or activity, what the customer is preparing for. \n"
+        #           "Do NOT describe items one by one. Do NOT list products. \n"
+        #           "Provide a concise scenario-level description (1-2 sentences).\n"
+        #           f"Products: {given_desc}"
+        # )
+        # 8
+    #     prompt = (
+    #     "Describe the purchase intent in one sentence using the format:\n"
+    #     "'Customers buy this product to [goal] in order to [benefit] during [scenario].'\n"
+    #     f"Product: {given_desc}"
+    # )
         # 9
+
         # prompt = (
         #     f"Given the basket items: {given_desc}, "
         #     "infer the user's underlying shopping intent and the real-life scenarios "
@@ -147,13 +168,12 @@ for user, item_data in tqdm(user_to_item_test_dict.items()):
         #     "Describe the concrete situations and how the items function together to support these goals. "
         #     "Focus on motivations and behaviors rather than listing products."
         # )
-
         # 10
-        prompt = (
-          f"Given the basket items: {given_desc}, "
-          "infer the user's underlying shopping intent and the real-life scenarios "
-          "that explain why these items are purchased together. "
-)
+#         prompt = (
+#           f"Given the basket items: {given_desc}, "
+#           "infer the user's underlying shopping intent and the real-life scenarios "
+#           "that explain why these items are purchased together. "
+# )
 
         basket_inputs.append(prompt)
         user_item_map.append(user)
@@ -167,13 +187,17 @@ shopping_intents = generate_shopping_intents_per_user(
 
 
 # =====================================================
-# Save intent text → CSV (NEW)
+# Save intent text
 # =====================================================
-intent_df = pd.DataFrame({
-    "user_id": user_item_map,
-    "intent_text": shopping_intents
-})
-
+# intent_df = pd.DataFrame({
+#     "user_id": user_item_map,
+#     "intent_text": shopping_intents
+# })
+#
+# intent_csv_path = '../../datasets/Dunnhumby/basket_intent_texts_10.csv'
+# intent_df.to_csv(intent_csv_path, index=False)
+#
+# print(f"Saved intent texts → {intent_csv_path}")
 
 
 # =====================================================
@@ -183,7 +207,7 @@ shopping_intent_embeddings = get_embedding(shopping_intents)
 
 
 # =====================================================
-# Build list[dict]  
+# Build list
 # =====================================================
 basket_intent_list = []
 
@@ -206,6 +230,7 @@ print(f"Saved basket embeddings → {basket_pickle_path}")
 # Item-level intent
 # =====================================================
 
+
 print("\nGenerating item intents...")
 
 unique_items_sorted = pd.concat([
@@ -227,18 +252,18 @@ def generate_item_intent_embeddings(items_df):
         #     f"Generate a specific shopping intent or multiple scenarios (if have) for a user with item {description} "
         #     "in their basket. Explain why the user might select the item, considering various scenarios such as "
         #     "preparation, household needs, or special events." )
-       
+        # 
         # 5
         prompt = (
             f"Given the  item {description}, write a brief shopping intent for the user."
         )
-        # 6
+        #6
         # prompt = (
         #     "You are an expert retail analyst. "
         #     "Infer the underlying purchase motivation and usage scenario.\n"
         #     f"Product: {description}"
         # )
-        # 7
+        # 版本7
         # prompt = (
         #     "You are an expert retail analyst. Given the product title and description,\n"
         #     "infer the underlying purchase intent. Describe: 1) the main function of the product,\n"
@@ -295,8 +320,11 @@ item_pickle_path = '../../datasets/Dunnhumby/item_intent_embeddings_384_t5_small
 with open(item_pickle_path, 'wb') as f:
     pickle.dump(item_intent_list, f)
 
+print(f"Saved item embeddings → {item_pickle_path}")
 
-intent_csv_path = '../../datasets/Dunnhumby/basket_intent_texts_10.csv'
-intent_df.to_csv(intent_csv_path, index=False)
+
+print("\nAll intents generated successfully ✓")
+
+
 
 
