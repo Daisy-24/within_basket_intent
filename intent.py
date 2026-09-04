@@ -174,7 +174,129 @@ intent_df = pd.DataFrame({
     "intent_text": shopping_intents
 })
 
+
+
+# =====================================================
+# Convert to embedding
+# =====================================================
+shopping_intent_embeddings = get_embedding(shopping_intents)
+
+
+# =====================================================
+# Build list[dict]  
+# =====================================================
+basket_intent_list = []
+
+for uid, emb in zip(user_item_map, shopping_intent_embeddings):
+    basket_intent_list.append({
+        "user_id": uid,
+        "shopping_intent_embedding": emb
+    })
+
+
+basket_pickle_path = '../../datasets/Dunnhumby/basket_embeddings_384_t5_small.pkl'
+
+with open(basket_pickle_path, 'wb') as f:
+    pickle.dump(basket_intent_list, f)
+
+print(f"Saved basket embeddings → {basket_pickle_path}")
+
+
+# =====================================================
+# Item-level intent
+# =====================================================
+
+print("\nGenerating item intents...")
+
+unique_items_sorted = pd.concat([
+    data_train[['item_id', 'SUB_COMMODITY_DESC']],
+    data_test[['item_id', 'SUB_COMMODITY_DESC']]
+]).drop_duplicates(subset='item_id').sort_values(by='item_id')
+
+
+def generate_item_intent_embeddings(items_df):
+
+    item_list = []
+
+    for _, row in tqdm(items_df.iterrows(), total=len(items_df)):
+
+        stock_code = row['item_id']
+        description = row['SUB_COMMODITY_DESC']
+        # version 1
+        # prompt= (
+        #     f"Generate a specific shopping intent or multiple scenarios (if have) for a user with item {description} "
+        #     "in their basket. Explain why the user might select the item, considering various scenarios such as "
+        #     "preparation, household needs, or special events." )
+       
+        # 5
+        prompt = (
+            f"Given the  item {description}, write a brief shopping intent for the user."
+        )
+        # 6
+        # prompt = (
+        #     "You are an expert retail analyst. "
+        #     "Infer the underlying purchase motivation and usage scenario.\n"
+        #     f"Product: {description}"
+        # )
+        # 7
+        # prompt = (
+        #     "You are an expert retail analyst. Given the product title and description,\n"
+        #     "infer the underlying purchase intent. Describe: 1) the main function of the product,\n"
+        #     "2) the typical usage scenario, 3) the customer need or problem it solves.\n"
+        #     "Do NOT repeat the product name. Do NOT list attributes.\n"
+        #     "Focus on the shopping motivation and usage purpose (1-2 sentences).\n"
+        #     f"Product: {description}"
+        # )
+        # 8
+        # prompt = (
+        #     "Describe the purchase intent in one sentence using the format:\n"
+        #     "'Customers buy this product to [goal] in order to [benefit] during [scenario].'\n"
+        #     f"Product: {description}"
+        # )
+        # 9
+        # prompt = (
+        #     f"Given the product title and description: {description}, "
+        #     "infer the underlying purchase intent and explain why a customer would buy this product. "
+        #     "Describe: "
+        #     "the main purpose or function, "
+        #     "specific real-life usage scenarios, "
+        #     "the user’s goals or problems it solves. "
+        #     "Focus on motivations and situations rather than product attributes. "
+        #     "Do NOT repeat the product name or list specifications."
+        # )
+
+        # 10
+        # prompt = (
+        #     f"Given the product title and description: {description}, "
+        #     "infer the underlying purchase intent and explain why a customer would buy this product. "
+        # )
+        inputs = t5_tokenizer(prompt, return_tensors="pt").to(device)
+
+        with torch.no_grad():
+            outputs = t5_model.generate(inputs["input_ids"], max_length=200)
+
+        intent_text = t5_tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+        emb = get_embedding(intent_text)
+
+        item_list.append({
+            "StockCode": stock_code,
+            "embedding": emb
+        })
+
+    return item_list
+
+
+item_intent_list = generate_item_intent_embeddings(unique_items_sorted)
+
+
+item_pickle_path = '../../datasets/Dunnhumby/item_intent_embeddings_384_t5_small.pkl'
+
+with open(item_pickle_path, 'wb') as f:
+    pickle.dump(item_intent_list, f)
+
+
 intent_csv_path = '../../datasets/Dunnhumby/basket_intent_texts_10.csv'
 intent_df.to_csv(intent_csv_path, index=False)
 
-print(f"Saved intent texts → {intent_csv_path}")
+
